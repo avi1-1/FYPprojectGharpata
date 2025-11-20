@@ -113,6 +113,28 @@ function RegisterPage({ setToken, setUser }) {
     setError("")
     setSuccess("")
 
+    // Validate Email - Gmail for regular users, GharPata for admins
+    if (!formData.email) {
+      setError("Email is required.")
+      return
+    }
+    
+    const emailLower = formData.email.toLowerCase()
+    const isGmailValid = emailLower.endsWith('@gmail.com')
+    const isGharPataValid = emailLower.endsWith('@gharpata.com')
+    
+    if (formData.role === 'admin') {
+      if (!isGharPataValid) {
+        setError("Admin accounts must use gharpata.com email (e.g., admin@gharpata.com)")
+        return
+      }
+    } else {
+      if (!isGmailValid) {
+        setError("Please use a valid Gmail address (e.g., name@gmail.com)")
+        return
+      }
+    }
+
     const phoneRegex = /^9\d{9}$/
     if (!formData.phone) {
       setError("Phone number is required.")
@@ -260,14 +282,23 @@ function RegisterPage({ setToken, setUser }) {
                   </div>
                 </div>
 
-                <div className="form-group-custom">
+                <div className="form-group-custom full-width">
                   <label>I am a...</label>
-                  <div className="input-with-icon">
-                    <Briefcase size={18} className="input-icon" />
-                    <select name="role" value={formData.role} onChange={handleChange}>
-                      <option value="tenant">Tenant (Looking for home)</option>
-                      <option value="landlord">Landlord (Listing properties)</option>
-                    </select>
+                  <div className="role-selection-tabs-register">
+                    <div 
+                      className={`role-tab-register ${formData.role === 'tenant' ? 'active' : ''}`}
+                      onClick={() => setFormData({ ...formData, role: 'tenant' })}
+                    >
+                      <UserPlus size={18} />
+                      <span>Tenant</span>
+                    </div>
+                    <div 
+                      className={`role-tab-register ${formData.role === 'landlord' ? 'active' : ''}`}
+                      onClick={() => setFormData({ ...formData, role: 'landlord' })}
+                    >
+                      <Briefcase size={18} />
+                      <span>Landlord</span>
+                    </div>
                   </div>
                 </div>
 
