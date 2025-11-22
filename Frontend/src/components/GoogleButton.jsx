@@ -2,13 +2,14 @@ import { useGoogleLogin } from '@react-oauth/google'
 import axios from 'axios'
 import './GoogleButton.css'
 
-function GoogleButtonContent({ onSuccess, onError, text }) {
+function GoogleButtonContent({ onSuccess, onError, text, role }) {
     const login = useGoogleLogin({
         onSuccess: async (tokenResponse) => {
             try {
-                // Send the access token to our backend
+                // Send the access token and the selected role to our backend
                 const response = await axios.post('/api/auth/google', {
-                    access_token: tokenResponse.access_token
+                    access_token: tokenResponse.access_token,
+                    role: role // Pass the role selected on the login page
                 })
 
                 // Call the parent success handler
@@ -46,7 +47,7 @@ function GoogleIcon() {
     )
 }
 
-function GoogleButton({ onSuccess, onError, text = "Continue with Google" }) {
+function GoogleButton({ onSuccess, onError, text = "Continue with Google", role }) {
     // Check if Client ID is configured
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
@@ -64,7 +65,7 @@ function GoogleButton({ onSuccess, onError, text = "Continue with Google" }) {
         )
     }
 
-    return <GoogleButtonContent onSuccess={onSuccess} onError={onError} text={text} />
+    return <GoogleButtonContent onSuccess={onSuccess} onError={onError} text={text} role={role} />
 }
 
 export default GoogleButton
