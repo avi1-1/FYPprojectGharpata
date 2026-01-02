@@ -69,7 +69,7 @@ function LandingPage() {
           <div className="hero-content">
             <div className="hero-tagline">
               <ShieldCheck size={18} />
-              <span>Trusted by 5000+ Tenants in Nepal</span>
+              {/* <span>Trusted by 5000+ Tenants in Nepal</span> */}
             </div>
             <h1>Find Your Next <br /><span>Perfect Home</span></h1>
             <p>The most advanced house rental management system in Nepal. Connect with verified landlords, pay securely, and move in with peace of mind.</p>
