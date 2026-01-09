@@ -1,3 +1,4 @@
+// User routes for profile management and file uploads
 const express = require("express")
 const { auth } = require("../middleware/auth")
 const multer = require("multer")
@@ -5,24 +6,28 @@ const path = require("path")
 const fs = require("fs")
 const router = express.Router()
 
-// Multer Config for Profile Pictures
+// Configure file storage for profile pictures
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const dir = "public/uploads/profiles"
+    // Create directory if it doesn't exist
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true })
     }
     cb(null, dir)
   },
   filename: (req, file, cb) => {
+    // Create unique filename with user ID and timestamp
     cb(null, `profile-${req.user.id}-${Date.now()}${path.extname(file.originalname)}`)
   },
 })
 
+// Setup multer with 2MB limit and image-only filter
 const upload = multer({
   storage: storage,
   limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
   fileFilter: (req, file, cb) => {
+    // Only allow image files
     const filetypes = /jpeg|jpg|png|webp/
     const mimetype = filetypes.test(file.mimetype)
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase())
@@ -31,10 +36,11 @@ const upload = multer({
   },
 })
 
-// Get user profile
+// Get current user's profile information
 router.get("/profile", auth, async (req, res) => {
   try {
     const pool = req.app.locals.pool
+    // Fetch user data excluding password for security
     const [users] = await pool.query(
       "SELECT id, name, email, phone, address, role, profilePicture FROM users WHERE id = ?",
       [req.user.id],
@@ -50,21 +56,24 @@ router.get("/profile", auth, async (req, res) => {
   }
 })
 
-// Get user's properties (landlord only)
+// Get landlord's properties (landlord only)
 router.get("/my-properties", auth, async (req, res) => {
   try {
     const pool = req.app.locals.pool
 
+    // Check if user is landlord
     if (req.user.role !== "landlord") {
       return res.status(403).json({ message: "Only landlords can view properties" })
     }
 
+    // Fetch all properties owned by this landlord
     const [properties] = await pool.query("SELECT * FROM properties WHERE landlordId = ? ORDER BY createdAt DESC", [
       req.user.id,
     ])
     res.json(properties)
   } catch (error) {
     console.error("My Properties Error:", error)
+    // Log error to file for debugging
     const logData = `[${new Date().toISOString()}] GET /api/users/my-properties Error: ${error.message}\nStack: ${error.stack}\nUser: ${req.user ? req.user.id : 'none'}\n\n`;
     const fs = require('fs');
     try { fs.appendFileSync('server_error.log', logData); } catch (e) { }
@@ -73,12 +82,13 @@ router.get("/my-properties", auth, async (req, res) => {
   }
 })
 
-// Update user profile
+// Update user profile information
 router.put("/profile", auth, async (req, res) => {
   try {
     const pool = req.app.locals.pool
     const { name, phone, address } = req.body
 
+    // Update user profile in database
     await pool.query(
       "UPDATE users SET name = ?, phone = ?, address = ? WHERE id = ?",
       [name, phone, address, req.user.id]
@@ -90,7 +100,7 @@ router.put("/profile", auth, async (req, res) => {
   }
 })
 
-// Upload profile picture
+// Upload and update profile picture
 router.post("/profile-picture", auth, upload.single("profilePicture"), async (req, res) => {
   try {
     const pool = req.app.locals.pool
@@ -100,13 +110,14 @@ router.post("/profile-picture", auth, upload.single("profilePicture"), async (re
 
     const profilePicture = req.file.filename
 
-    // Optional: Delete old profile picture if exists
+    // Delete old profile picture if exists
     const [user] = await pool.query("SELECT profilePicture FROM users WHERE id = ?", [req.user.id])
     if (user[0]?.profilePicture) {
       const oldPath = path.join("public/uploads/profiles", user[0].profilePicture)
       if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath)
     }
 
+    // Update profile picture in database
     await pool.query("UPDATE users SET profilePicture = ? WHERE id = ?", [profilePicture, req.user.id])
 
     res.json({
