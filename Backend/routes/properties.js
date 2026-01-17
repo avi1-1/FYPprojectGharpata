@@ -1,3 +1,4 @@
+// Property management routes for listings and searches
 const express = require("express")
 const multer = require("multer")
 const path = require("path")
@@ -6,28 +7,32 @@ const fs = require("fs")
 const jwt = require("jsonwebtoken")
 const router = express.Router()
 
-// Configure Multer for Property Images
-// Configure Multer for mixed storage (Property Images & Verification Documents)
+// Configure file storage for property images and documents
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
+    // Separate directories for images and documents
     let dir = "public/uploads/properties"
     if (file.fieldname === "documents") {
       dir = "public/uploads/property-documents"
     }
+    // Create directory if it doesn't exist
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true })
     }
     cb(null, dir)
   },
   filename: (req, file, cb) => {
+    // Generate unique filename with timestamp and random number
     cb(null, Date.now() + "-" + Math.round(Math.random() * 1E9) + path.extname(file.originalname))
   },
 })
 
+// Setup multer with file validation
 const upload = multer({
   storage: storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: (req, file, cb) => {
+    // Allow images and PDF documents only
     const filetypes = /jpeg|jpg|png|webp|pdf/
     const mimetype = filetypes.test(file.mimetype)
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase())
@@ -38,17 +43,19 @@ const upload = multer({
   },
 })
 
+// Configure upload fields (max 5 images, max 3 documents)
 const propertyUpload = upload.fields([
   { name: 'images', maxCount: 5 },
   { name: 'documents', maxCount: 3 }
 ])
 
-// Get all approved properties
+// Get all approved and available properties with optional filters
 router.get("/", async (req, res) => {
   try {
     const pool = req.app.locals.pool
     const { city, priceMin, priceMax, bedrooms, type } = req.query
 
+    // Base query for approved and available properties
     let query = `
       SELECT id, landlordId, title, description, address, city, district, 
              type, bhkType, bedrooms, bathrooms, area, rentPrice, 
@@ -59,6 +66,7 @@ router.get("/", async (req, res) => {
     `
     const params = []
 
+    // Add filters if provided
     if (city) {
       query += " AND city = ?"
       params.push(city)
@@ -84,6 +92,7 @@ router.get("/", async (req, res) => {
     res.json(properties)
   } catch (error) {
     console.error("Fetch Properties Error:", error)
+    // Log error to file for debugging
     const logData = `[${new Date().toISOString()}] GET /api/properties Error: ${error.message}\nStack: ${error.stack}\n\n`;
     try { fs.appendFileSync('server_error.log', logData); } catch (e) { }
 
@@ -91,13 +100,12 @@ router.get("/", async (req, res) => {
   }
 })
 
-
-// Get property by ID
+// Get single property by ID (with optional auth for unapproved properties)
 router.get("/:id", async (req, res) => {
   try {
     const pool = req.app.locals.pool
 
-    // Optional auth: check if user is logged in to allow viewing unapproved properties (admin/owner)
+    // Check if user is authenticated to view unapproved properties
     let requesterId = null
     let requesterRole = null
     const authHeader = req.headers.authorization
@@ -174,11 +182,34 @@ router.post("/", auth, propertyUpload, async (req, res) => {
     const imageFilenames = req.files && req.files['images'] ? req.files['images'].map((file) => file.filename) : []
     const docFilenames = req.files && req.files['documents'] ? req.files['documents'].map((file) => file.filename) : []
 
+    const safeNum = (val) => (val === "" || val === undefined || val === null) ? null : Number(val);
+    const rentVal = safeNum(rentPrice)
+    const depositVal = safeNum(depositAmount)
+    const areaVal = safeNum(area)
+    const bedroomsVal = safeNum(bedrooms)
+    const bathroomsVal = safeNum(bathrooms)
+
+    if (rentVal === null || Number.isNaN(rentVal) || rentVal < 0) {
+      return res.status(400).json({ message: "Monthly rent must be a valid non-negative number." })
+    }
+    if (depositVal !== null && (Number.isNaN(depositVal) || depositVal < 0)) {
+      return res.status(400).json({ message: "Deposit amount must be a valid non-negative number." })
+    }
+    if (areaVal !== null && (Number.isNaN(areaVal) || areaVal < 0)) {
+      return res.status(400).json({ message: "Area must be a valid non-negative number." })
+    }
+    if (bedroomsVal !== null && (Number.isNaN(bedroomsVal) || bedroomsVal < 0)) {
+      return res.status(400).json({ message: "Bedrooms must be a valid non-negative number." })
+    }
+    if (bathroomsVal !== null && (Number.isNaN(bathroomsVal) || bathroomsVal < 0)) {
+      return res.status(400).json({ message: "Bathrooms must be a valid non-negative number." })
+    }
+
     await pool.query(
       "INSERT INTO properties (landlordId, title, description, address, city, district, type, bhkType, bedrooms, bathrooms, area, rentPrice, depositAmount, amenities, facilities, rules, images, verificationDocuments) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
         req.user.id, title, description, address, city, district, type, bhkType || null,
-        bedrooms, bathrooms, area, rentPrice, depositAmount,
+        safeNum(bedrooms), safeNum(bathrooms), areaVal, rentVal, depositVal,
         ensureJSON(amenities), ensureJSON(facilities), rules,
         JSON.stringify(imageFilenames), JSON.stringify(docFilenames)
       ],
@@ -220,11 +251,34 @@ router.put("/:id", auth, propertyUpload, async (req, res) => {
       docFilenames = req.files['documents'].map((file) => file.filename)
     }
 
+    const safeNum = (val) => (val === "" || val === undefined || val === null) ? null : Number(val);
+    const rentVal = safeNum(rentPrice)
+    const depositVal = safeNum(depositAmount)
+    const areaVal = safeNum(area)
+    const bedroomsVal = safeNum(bedrooms)
+    const bathroomsVal = safeNum(bathrooms)
+
+    if (rentVal === null || Number.isNaN(rentVal) || rentVal < 0) {
+      return res.status(400).json({ message: "Monthly rent must be a valid non-negative number." })
+    }
+    if (depositVal !== null && (Number.isNaN(depositVal) || depositVal < 0)) {
+      return res.status(400).json({ message: "Deposit amount must be a valid non-negative number." })
+    }
+    if (areaVal !== null && (Number.isNaN(areaVal) || areaVal < 0)) {
+      return res.status(400).json({ message: "Area must be a valid non-negative number." })
+    }
+    if (bedroomsVal !== null && (Number.isNaN(bedroomsVal) || bedroomsVal < 0)) {
+      return res.status(400).json({ message: "Bedrooms must be a valid non-negative number." })
+    }
+    if (bathroomsVal !== null && (Number.isNaN(bathroomsVal) || bathroomsVal < 0)) {
+      return res.status(400).json({ message: "Bathrooms must be a valid non-negative number." })
+    }
+
     await pool.query(
       "UPDATE properties SET title = ?, description = ?, address = ?, city = ?, district = ?, type = ?, bhkType = ?, bedrooms = ?, bathrooms = ?, area = ?, rentPrice = ?, depositAmount = ?, amenities = ?, facilities = ?, rules = ?, images = ?, verificationDocuments = ?, status = ? WHERE id = ?",
       [
         title, description, address, city, district, type, bhkType || null,
-        bedrooms, bathrooms, area, rentPrice, depositAmount,
+        safeNum(bedrooms), safeNum(bathrooms), areaVal, rentVal, depositVal,
         ensureJSON(amenities), ensureJSON(facilities), rules,
         typeof imageFilenames === 'string' ? imageFilenames : JSON.stringify(imageFilenames),
         typeof docFilenames === 'string' ? docFilenames : JSON.stringify(docFilenames),
