@@ -1,0 +1,16 @@
+node_modules/
+.env
+.env.local
+.env.production
+
+# Logs
+*.log
+*.txt
+npm-debug.log*
+yarn-debug.log*
+
+# Uploads (keep structure, ignore content if needed)
+# public/uploads/*
+
+# OS
+.DS_Store
