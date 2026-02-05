@@ -48,14 +48,15 @@ function PropertyDetails() {
   const handleBooking = async (e) => {
     e.preventDefault()
 
-    if (!token) {
-      alert("Please login to book a property")
+    const currentToken = localStorage.getItem("token")
+    if (!currentToken || currentToken === "undefined" || currentToken === "null") {
+      alert("Please login to book a property. Your session may have expired.")
       navigate("/login")
       return
     }
 
     try {
-      const headers = { Authorization: `Bearer ${token}` }
+      const headers = { Authorization: `Bearer ${currentToken}` }
       await axios.post(
         "/api/bookings",
         {
