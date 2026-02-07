@@ -3,20 +3,25 @@ import { XCircle } from 'lucide-react';
 import axios from 'axios';
 import PaymentGateway from './PaymentGateway';
 
-const RentalAgreementModal = ({ show, onClose, booking, user, onUpdate }) => {
+const RentalAgreementModal = ({ show, onClose, booking, user, onUpdate, isReadOnly }) => {
     const [step, setStep] = useState(1);
     const token = localStorage.getItem("token");
 
     useEffect(() => {
         if (show && booking) {
-            // If the contract is already agreed, jump to payment step
-            if (booking.status === 'contract_agreed') {
+            // If viewing only, always show the contract text (step 1)
+            if (isReadOnly) {
+                setStep(1);
+                return;
+            }
+            // If the contract is already signed, jump directly to payment step
+            if (['active', 'confirmed', 'contract_agreed'].includes(booking.status)) {
                 setStep(2);
             } else {
                 setStep(1);
             }
         }
-    }, [show, booking]);
+    }, [show, booking, isReadOnly]);
 
     if (!show || !booking) return null;
 
@@ -32,7 +37,8 @@ const RentalAgreementModal = ({ show, onClose, booking, user, onUpdate }) => {
     };
 
     const handlePaymentSuccess = () => {
-        alert("Deposit Paid! You are now the active tenant.");
+        const isInitial = booking.status === 'contract_agreed' || booking.status === 'approved';
+        alert(isInitial ? "Deposit Paid! You are now the active tenant." : "Payment Successful! Your rent record has been updated.");
         onUpdate();
         onClose();
     };
@@ -41,7 +47,7 @@ const RentalAgreementModal = ({ show, onClose, booking, user, onUpdate }) => {
         <div className="modal-overlay">
             <div className="modal-content contract-modal">
                 <div className="modal-header">
-                    <h3>{step === 1 ? "Rental Agreement" : "Complete Activation"}</h3>
+                    <h3>{isReadOnly ? "Rental Agreement (View Only)" : step === 1 ? "Rental Agreement" : "Complete Activation"}</h3>
                     <button onClick={onClose} className="close-btn"><XCircle size={24} /></button>
                 </div>
                 <div className="modal-body">
@@ -71,14 +77,16 @@ const RentalAgreementModal = ({ show, onClose, booking, user, onUpdate }) => {
                                 <p>The tenant agrees to abide by all house rules specified by the landlord and maintain the property in good condition.</p>
                             </div>
 
-                            <div className="contract-actions">
-                                <button
-                                    className="btn-primary btn-lg btn-block"
-                                    onClick={handleAgree}
-                                >
-                                    I Agree & Proceed to Payment
-                                </button>
-                            </div>
+                            {!isReadOnly && (
+                                <div className="contract-actions">
+                                    <button
+                                        className="btn-primary btn-lg btn-block"
+                                        onClick={handleAgree}
+                                    >
+                                        I Agree & Proceed to Payment
+                                    </button>
+                                </div>
+                            )}
                         </>
                     ) : (
                         <PaymentGateway
