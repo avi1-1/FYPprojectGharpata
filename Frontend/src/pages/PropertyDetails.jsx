@@ -14,7 +14,8 @@ function PropertyDetails() {
   const [showBookingForm, setShowBookingForm] = useState(false)
   const [bookingData, setBookingData] = useState({
     moveInDate: "",
-    moveOutDate: "",
+    durationYears: "1",
+    isCustomDuration: false
   })
 
   // Gallery State
@@ -308,19 +309,47 @@ function PropertyDetails() {
                           value={bookingData.moveInDate}
                           onChange={(e) => setBookingData({ ...bookingData, moveInDate: e.target.value })}
                           required
+                          min={new Date().toLocaleDateString('en-CA')}
                         />
                       </div>
+
                       <div className="form-group">
-                        <label>Move-out Date (Optional)</label>
-                        <input
-                          type="date"
-                          name="moveOutDate"
-                          value={bookingData.moveOutDate}
-                          onChange={(e) => setBookingData({ ...bookingData, moveOutDate: e.target.value })}
-                        />
+                        <label>Duration</label>
+                        <select
+                          className="form-control"
+                          onChange={(e) => {
+                            const val = e.target.value
+                            setBookingData(prev => ({
+                              ...prev,
+                              durationYears: val === 'custom' ? '' : val,
+                              isCustomDuration: val === 'custom'
+                            }))
+                          }}
+                          defaultValue="1"
+                        >
+                          <option value="1">1 Year</option>
+                          <option value="2">2 Years</option>
+                          <option value="3">3 Years</option>
+                          <option value="custom">Custom Years</option>
+                        </select>
                       </div>
+
+                      {bookingData.isCustomDuration && (
+                        <div className="form-group">
+                          <label>Enter Years</label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="50"
+                            placeholder="e.g. 5"
+                            onChange={(e) => setBookingData({ ...bookingData, durationYears: e.target.value })}
+                            required
+                          />
+                        </div>
+                      )}
+
                       <button type="submit" className="btn-success">
-                        Confirm Booking
+                        Request Booking
                       </button>
                     </form>
                   )}
