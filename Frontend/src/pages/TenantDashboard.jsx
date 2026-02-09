@@ -20,6 +20,7 @@ import {
   CheckCircle,
   XCircle
 } from "lucide-react"
+import RentalAgreementModal from "../components/RentalAgreementModal"
 import "./TenantDashboard.css"
 
 function TenantDashboard({ onLogout, user: initialUser }) {
@@ -32,6 +33,8 @@ function TenantDashboard({ onLogout, user: initialUser }) {
   const [activeTab, setActiveTab] = useState("properties")
   const [loading, setLoading] = useState(true)
   const [searchFilters, setSearchFilters] = useState({ city: "", priceMin: "", priceMax: "" })
+  const [showContractModal, setShowContractModal] = useState(false)
+  const [selectedBooking, setSelectedBooking] = useState(null)
 
   // Profile Update State
   const [profileData, setProfileData] = useState({
@@ -378,8 +381,10 @@ function TenantDashboard({ onLogout, user: initialUser }) {
                     <tr>
                       <th>Property</th>
                       <th>Move In Date</th>
+                      <th>Duration</th>
                       <th>Monthly Rent</th>
                       <th>Status</th>
+                      <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -387,11 +392,39 @@ function TenantDashboard({ onLogout, user: initialUser }) {
                       <tr key={booking.id}>
                         <td className="table-cell-title">{booking.title}</td>
                         <td>{new Date(booking.moveInDate).toLocaleDateString()}</td>
+                        <td>{booking.durationYears ? `${booking.durationYears} Year(s)` : '-'}</td>
                         <td className="table-cell-price">Rs. {booking.monthlyRent.toLocaleString()}</td>
                         <td>
                           <span className={`badge ${booking.status}`}>
-                            {booking.status}
+                            {booking.status === 'contract_agreed' ? 'Pending Deposit' : booking.status}
                           </span>
+                        </td>
+                        <td>
+                          {booking.status === "approved" && (
+                            <button
+                              className="btn-primary btn-sm"
+                              onClick={() => {
+                                setSelectedBooking(booking)
+                                setShowContractModal(true)
+                              }}
+                            >
+                              View Contract
+                            </button>
+                          )}
+                          {booking.status === "contract_agreed" && (
+                            <button
+                              className="btn-success btn-sm"
+                              onClick={() => {
+                                setSelectedBooking(booking)
+                                setShowContractModal(true)
+                              }}
+                            >
+                              Continue to Payment
+                            </button>
+                          )}
+                          {booking.status === "active" && (
+                            <span className="text-success"><CheckCircle size={16} /> Active Tenant</span>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -402,65 +435,76 @@ function TenantDashboard({ onLogout, user: initialUser }) {
           </div>
         )}
 
-        {activeTab === "complaints" && (
-          <div className="tab-content">
-            {loading ? <p>Loading...</p> : (
-              <div className="complaints-grid">
-                {complaints.map((c) => (
-                  <div key={c.id} className="complaint-card">
-                    <div className="complaint-header">
-                      <h4 className="complaint-title">{c.title}</h4>
-                      <span className={`badge ${c.status === 'resolved' ? 'active' : 'pending'}`}>{c.status}</span>
-                    </div>
-                    <p className="complaint-desc">{c.description}</p>
-                    <div className="complaint-meta">
-                      Category: {c.category} • Severity: {c.severity}
-                    </div>
-                  </div>
-                ))}
-                {complaints.length === 0 && (
-                  <div className="empty-state-card">
-                    <MessageSquare size={48} />
-                    <p>No complaints filed.</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+        <RentalAgreementModal
+          show={showContractModal}
+          onClose={() => setShowContractModal(false)}
+          booking={selectedBooking}
+          user={user}
+          onUpdate={fetchData}
+        />
 
-        {activeTab === "payments" && (
-          <div className="tab-content">
-            {loading ? <p>Loading...</p> : (
-              <div className="table-container">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Type</th>
-                      <th>Amount</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {payments.map((p) => (
-                      <tr key={p.id}>
-                        <td>{new Date(p.createdAt).toLocaleDateString()}</td>
-                        <td className="table-cell-cap">{p.paymentType}</td>
-                        <td className="table-cell-price">Rs. {p.amount.toLocaleString()}</td>
-                        <td><span className={`badge ${p.status === 'completed' ? 'active' : 'pending'}`}>{p.status}</span></td>
+
+        {
+          activeTab === "complaints" && (
+            <div className="tab-content">
+              {loading ? <p>Loading...</p> : (
+                <div className="complaints-grid">
+                  {complaints.map((c) => (
+                    <div key={c.id} className="complaint-card">
+                      <div className="complaint-header">
+                        <h4 className="complaint-title">{c.title}</h4>
+                        <span className={`badge ${c.status === 'resolved' ? 'active' : 'pending'}`}>{c.status}</span>
+                      </div>
+                      <p className="complaint-desc">{c.description}</p>
+                      <div className="complaint-meta">
+                        Category: {c.category} • Severity: {c.severity}
+                      </div>
+                    </div>
+                  ))}
+                  {complaints.length === 0 && (
+                    <div className="empty-state-card">
+                      <MessageSquare size={48} />
+                      <p>No complaints filed.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        }
+        {
+          activeTab === "payments" && (
+            <div className="tab-content">
+              {loading ? <p>Loading...</p> : (
+                <div className="table-container">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Status</th>
                       </tr>
-                    ))}
-                    {payments.length === 0 && (
-                      <tr><td colSpan="4" className="table-empty-msg">No payment records found</td></tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-
+                    </thead>
+                    <tbody>
+                      {payments.map((p) => (
+                        <tr key={p.id}>
+                          <td>{new Date(p.createdAt).toLocaleDateString()}</td>
+                          <td className="table-cell-cap">{p.paymentType}</td>
+                          <td className="table-cell-price">Rs. {p.amount.toLocaleString()}</td>
+                          <td><span className={`badge ${p.status === 'completed' ? 'active' : 'pending'}`}>{p.status}</span></td>
+                        </tr>
+                      ))}
+                      {payments.length === 0 && (
+                        <tr><td colSpan="4" className="table-empty-msg">No payment records found</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )
+        }
       </main>
     </div>
   )
