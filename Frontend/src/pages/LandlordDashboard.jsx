@@ -763,12 +763,13 @@ function LandlordDashboard({ onLogout, user: initialUser }) {
                         </td>
                         <td>
                           <div className="timeline-cell">
-                            <Clock size={14} /> Move In: {new Date(booking.moveInDate).toLocaleDateString()}
+                            <div><Clock size={14} /> Move In: {new Date(booking.moveInDate).toLocaleDateString()}</div>
+                            <div style={{ fontSize: '0.85em', color: '#666', marginTop: '4px' }}>Duration: {booking.durationYears ? `${booking.durationYears} Year(s)` : 'N/A'}</div>
                           </div>
                         </td>
                         <td className="table-cell-amount">Rs. {booking.monthlyRent}</td>
                         <td>
-                          <span className={`badge ${booking.status}`}>{booking.status}</span>
+                          <span className={`badge ${booking.status}`}>{booking.status === 'contract_agreed' ? 'Contract Agreed' : booking.status}</span>
                         </td>
                         <td>
                           {booking.status === "pending" && (
