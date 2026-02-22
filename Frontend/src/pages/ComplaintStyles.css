@@ -1,0 +1,467 @@
+/* ═══════════════════════════════════════════════════════════
+   Gharpata Ticket System — Unified Professional Module
+   Standardized across Tenant, Landlord, and Admin
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── 1. Shared Layout & Stats ── */
+.complaints-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    background: white;
+    padding: 1.5rem 2rem;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+}
+
+.complaints-header h3 {
+    margin: 0;
+    font-size: 1.6rem;
+    font-weight: 950;
+    color: #1e293b;
+    letter-spacing: -0.5px;
+}
+
+.header-subtitle {
+    margin: 5px 0 0;
+    font-size: 0.92rem;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.complaints-header .btn-primary {
+    padding: 12px 24px;
+    border-radius: 14px;
+    font-size: 0.95rem;
+    font-weight: 850;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.complaints-header .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+}
+
+.complaints-header .btn-secondary {
+    background: white;
+    color: #4b5563;
+    border: 1.5px solid #e5e7eb;
+    box-shadow: none;
+}
+
+.complaint-status-stats, .c-stats-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin-bottom: 2.5rem;
+    background: white;
+    padding: 1.5rem;
+    border-radius: 24px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+}
+
+.c-stat-box, .c-stat-chip {
+    flex: 1;
+    min-width: 160px;
+    padding: 0 1.5rem;
+    border-right: 1.5px solid #f1f5f9;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: transform 0.2s ease;
+}
+
+.c-stat-box:hover { transform: translateY(-2px); }
+.c-stat-box:last-child, .c-stat-chip:last-child { border-right: none; }
+.c-stat-label { font-size: 0.75rem; font-weight: 850; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+.c-stat-val, .c-stat-num { font-size: 1.75rem; font-weight: 950; color: #1e293b; line-height: 1.2; }
+
+/* ── 2. Unified Ticket Card Structure ── */
+.complaints-ticket-list, .c-tickets-list, .complaints-list { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 1rem; 
+    width: 100%; 
+}
+
+.complaint-ticket, .c-ticket, .complaint-card-full {
+    background: white;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    width: 100%;
+}
+
+.c-ticket-header {
+    min-width: 1200px;
+    overflow-x: auto;
+    width: 100%;
+}
+
+/* Custom subtle scrollbar for swipe-like feel */
+.c-ticket-header::-webkit-scrollbar {
+    height: 4px;
+}
+.c-ticket-header::-webkit-scrollbar-track {
+    background: transparent;
+}
+.c-ticket-header::-webkit-scrollbar-thumb {
+    background: rgba(79, 70, 229, 0.1);
+    border-radius: 10px;
+}
+.c-ticket-header:hover::-webkit-scrollbar-thumb {
+    background: rgba(79, 70, 229, 0.2);
+}
+
+.complaint-ticket.expanded, .c-ticket-open, .complaint-card-full.expanded {
+    border-color: #4f46e5;
+    box-shadow: 0 20px 40px rgba(79, 70, 229, 0.08);
+    transform: translateY(-2px);
+    margin-bottom: 0.5rem;
+}
+
+.ticket-severity-bar, .c-sev-bar { 
+    position: absolute; 
+    left: 0; 
+    top: 0; 
+    bottom: 0; 
+    width: 6px; 
+    border-radius: 6px 0 0 6px;
+}
+
+/* ── 3. Ticket Header Components ── */
+.ticket-main-row, .c-ticket-header, .complaint-card-header {
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Standard Flex Header for Tenant/Landlord */
+.ticket-meta-left, .complaint-card-left {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex: 1;
+}
+
+/* Specific Grid for Admin Header to ensure Alignment */
+.admin-dashboard .c-ticket-header {
+    display: grid;
+    grid-template-columns: 400px 120px 180px 40px 180px 550px auto;
+    gap: 1.5rem;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    width: 100%;
+}
+
+.ticket-title, .c-ticket-title, .complaint-title-text { 
+    font-size: 1.05rem; 
+    font-weight: 850; 
+    color: #1e293b; 
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    margin: 0;
+    max-width: 180px; /* Reduced to leave room for category badge */
+}
+
+.c-ticket-left {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    width: 400px; /* Widened to fix MAINTENANCE overlap */
+}
+
+.ticket-id, .c-ticket-id {
+    font-family: 'JetBrains Mono', monospace; 
+    font-size: 0.72rem; 
+    font-weight: 850;
+    color: #64748b; 
+    background: #f1f5f9; 
+    padding: 5px 12px; 
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    width: 65px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.c-status-badge {
+    width: 180px;
+    flex-shrink: 0;
+}
+
+.c-ticket-right {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    flex-shrink: 0;
+    justify-self: end;
+}
+
+.c-tickets-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    width: 100%;
+    overflow-x: auto; /* Restored sideways scroll at list level */
+    padding-bottom: 1.5rem;
+}
+
+.complaint-ticket, .c-ticket {
+    min-width: 1550px; /* Ensures straight lines across rows */
+    width: fit-content;
+    background: white;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+}
+
+.ticket-sub-row, .complaint-meta-row, .c-ticket-title-block {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.ticket-cat, .complaint-cat-badge { 
+    font-size: 0.68rem; 
+    font-weight: 950; 
+    text-transform: uppercase; 
+    color: #4f46e5; 
+    letter-spacing: 1.2px; 
+    background: #f5f7ff;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.ticket-date, .complaint-date, .c-date-text {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dot { width: 4px; height: 4px; background: #cbd5e1; border-radius: 50%; }
+
+/* Role & Status Badges */
+.ticket-status-bubble, .c-status-badge, .status-pill {
+    padding: 8px 16px; 
+    border-radius: 100px; 
+    font-size: 0.72rem; 
+    font-weight: 950;
+    text-transform: uppercase; 
+    letter-spacing: 1px; 
+    border: 1.5px solid transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+.status-pending { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+.status-inprogress { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+.status-resolved { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+.status-closed { background: #f8fafc; color: #475569; border-color: #e2e8f0; }
+.status-rejected { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+.status-escalated { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
+.status-force { background: #faf5ff; color: #6d28d9; border-color: #ddd6fe; }
+.status-warning { background: #fffbeb; color: #92400e; border-color: #fde68a; }
+.status-suspended { background: #fef2f2; color: #991b1b; border-color: #fca5a5; }
+
+/* Parties (Admin/Landlord View) */
+.c-party { display: flex; align-items: center; gap: 12px; }
+.c-party-ava { 
+    width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; 
+    justify-content: center; font-size: 0.85rem; font-weight: 900; color: white;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.c-ava-tenant { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.c-ava-landlord { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.c-party-info { display: flex; flex-direction: column; }
+.c-party-role { font-size: 0.6rem; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+.c-party-name { font-size: 0.9rem; font-weight: 850; color: #1e293b; }
+.c-arrow { color: #cbd5e1; font-weight: 900; font-size: 1.2rem; }
+
+/* ── 4. Interaction Elements ── */
+.ticket-meta-right, .complaint-card-right, .c-ticket-right {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.ticket-exp-icon { color: #64748b; display: flex; align-items: center; transition: transform 0.3s ease; }
+.expanded .ticket-exp-icon { color: #4f46e5; }
+
+.c-override-row { display: flex; align-items: center; gap: 10px; }
+.c-status-select { 
+    padding: 6px 12px; border-radius: 8px; border: 1.5px solid #e2e8f0; 
+    font-size: 0.8rem; font-weight: 800; color: #475569; background: #f8fafc;
+}
+
+/* ── 5. Detail Body Structure ── */
+.ticket-detail-body, .c-ticket-body, .c-detail-panel, .complaint-card-body {
+    padding: 0 2.5rem 2.5rem;
+    border-top: 1px dashed #e2e8f0;
+    background: #fcfdfe;
+}
+
+.detail-section, .complaint-description { padding: 1.75rem 0; }
+.detail-label, .admin-field-label { 
+    font-size: 0.72rem; font-weight: 900; color: #94a3b8; 
+    text-transform: uppercase; margin-bottom: 10px; letter-spacing: 0.5px;
+    display: block;
+}
+
+.detail-content, .text-soft { 
+    font-size: 1rem; line-height: 1.7; color: #334155; 
+    background: #fff; padding: 1.25rem; border-radius: 12px; border: 1px solid #f1f5f9;
+}
+
+/* Audit/Info Cards (Unified) */
+.detail-audit-grid, .investigation-grid {
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+    gap: 1.25rem; 
+    margin-top: 1.5rem;
+}
+
+.audit-note, .info-card {
+    padding: 1.25rem;
+    border-radius: 14px;
+    border-left: 4px solid transparent;
+}
+
+.audit-note.rejection, .rejection-card { background: #fef2f2; border-color: #ef4444; color: #b91c1c; }
+.audit-note.resolution, .resolution-card { background: #f0fdf4; border-color: #22c55e; color: #15803d; }
+.audit-note.admin, .admin-remarks-card { background: #eff6ff; border-color: #3b82f6; color: #1d4ed8; }
+
+.note-title, .info-card-title {
+    display: flex; align-items: center; gap: 8px; 
+    font-size: 0.8rem; font-weight: 900; text-transform: uppercase; 
+    margin-bottom: 6px;
+}
+
+.audit-note p, .info-card p { margin: 0; font-size: 0.94rem; line-height: 1.5; font-weight: 600; }
+
+/* Management/Action Panels */
+.resolution-verification-bar, .complaint-action-panel {
+    margin-top: 2.5rem; padding: 1.75rem; border-radius: 20px;
+    display: flex; justify-content: space-between; align-items: center; gap: 1.5rem;
+}
+
+.resolution-verification-bar { background: #fffbeb; border: 1px solid #fde68a; }
+.complaint-action-panel { background: #f8fafc; border: 1px solid #e2e8f0; }
+
+.verify-info h4, .panel-title { font-size: 1rem; font-weight: 900; color: #1e293b; margin: 0; }
+.verify-info p { font-size: 0.88rem; color: #64748b; margin: 4px 0 0; }
+
+.btn-verify-accept, .btn-admin-apply {
+    background: #059669; color: white; padding: 10px 20px; border-radius: 12px;
+    font-weight: 850; font-size: 0.85rem; border: none; cursor: pointer;
+    display: flex; align-items: center; gap: 10px; transition: all 0.2s;
+}
+
+.btn-admin-apply.status-changed {
+    background: #4f46e5;
+    box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);
+}
+
+.btn-admin-apply.status-changed:hover {
+    background: #4338ca;
+    transform: translateY(-1px);
+}
+
+.btn-admin-apply.status-current {
+    background: #f1f5f9;
+    color: #94a3b8;
+    cursor: default;
+    border: 1px solid #e2e8f0;
+}
+
+.btn-admin-apply:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.btn-verify-escalate, .btn-admin-reject {
+    background: white; color: #ef4444; padding: 10px 20px; border-radius: 12px;
+    font-weight: 850; font-size: 0.85rem; border: 1.5px solid #fee2e2; cursor: pointer;
+    display: flex; align-items: center; gap: 10px; transition: all 0.2s;
+}
+
+/* ── 6. Unified Comments/Discussion ── */
+.comments-section { margin-top: 2.5rem; }
+.comments-heading, .section-title { 
+    display: flex; align-items: center; gap: 10px; 
+    font-size: 0.95rem; font-weight: 900; color: #1e293b; 
+    margin-bottom: 1.25rem; 
+}
+
+.comments-thread {
+    display: flex; flex-direction: column; gap: 1rem;
+    background: #f8fafc; padding: 1.5rem; border-radius: 24px;
+    border: 1px solid #eef2ff;
+}
+
+.comment-bubble { max-width: 85%; display: flex; flex-direction: column; }
+.comment-mine, .mine { align-self: flex-end; }
+.comment-other, .other { align-self: flex-start; }
+
+.comment-meta {
+    display: flex; align-items: center; gap: 8px; font-size: 0.75rem; 
+    font-weight: 800; color: #94a3b8; margin-bottom: 6px;
+}
+
+.mine .comment-meta { justify-content: flex-end; }
+
+.comment-box, .comment-text {
+    padding: 1rem 1.4rem; border-radius: 18px; font-size: 0.95rem; line-height: 1.6;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+
+.comment-mine .comment-text, .mine .comment-box { background: #4f46e5; color: white; border: none; border-bottom-right-radius: 4px; }
+.comment-other .comment-text, .other .comment-box { background: white; color: #1e293b; border: 1.5px solid #e2e8f0; border-bottom-left-radius: 4px; }
+
+.comment-input-group, .comment-reply-box {
+    margin-top: 1.5rem; display: flex; gap: 12px;
+}
+
+.comment-input-group input, .comment-reply-box input {
+    flex: 1; padding: 1rem 1.5rem; border-radius: 14px; 
+    border: 1.8px solid #e2e8f0; font-size: 0.92rem; font-weight: 600;
+    transition: border-color 0.2s;
+}
+
+.comment-input-group input:focus { border-color: #4f46e5; outline: none; }
+
+.no-comments { text-align: center; color: #94a3b8; font-size: 0.9rem; padding: 1rem; }
+
+/* Role Tags in Metadata */
+.role-tag { 
+    font-size: 0.6rem; font-weight: 900; text-transform: uppercase; 
+    padding: 2px 8px; border-radius: 6px; letter-spacing: 0.5px;
+}
+.role-tenant { background: #dbeafe; color: #1e40af; }
+.role-landlord { background: #ffedd5; color: #9a3412; }
+.role-admin { background: #e0e7ff; color: #4338ca; }
+
+/* ── 7. Utility Overrides ── */
+.text-soft { color: #64748b; font-weight: 500; }
+.bold { font-weight: 900 !important; }
+.urgent { background: #ef4444 !important; }
